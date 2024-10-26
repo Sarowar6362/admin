@@ -3,6 +3,7 @@ import {mongooseConnect} from "@/lib/mongoose";
 import {getServerSession} from "next-auth";
 import {authOptions, isAdminRequest} from "@/pages/api/auth/[...nextauth]";
 
+export const maxDuration = 300;
 export default async function handle(req, res) {
   const {method} = req;
   await mongooseConnect();

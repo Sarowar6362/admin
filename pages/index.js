@@ -22,3 +22,7 @@ export default function Home() {
     </div>
   </Layout>
 }
+
+
+
+//http://localhost:3000/api/auth/callback/google
