@@ -126,11 +126,13 @@ export default function OrdersPage() {
                   {order.paid ? "YES" : "NO"}
                 </td>
                 <td>
-                  {order.name} {order.email}
+                   Name : {order.name} 
                   <br />
-                  {order.city} {order.postalCode} {order.country}
+                  Email : {order.email}
                   <br />
-                  {order.streetAddress}
+                  Phone : {order.postalCode} 
+                  <br />
+                  Address : {order.streetAddress}
                 </td>
                 <td>
                   {order.line_items.map((l, index) => (
