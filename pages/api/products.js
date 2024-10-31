@@ -56,16 +56,32 @@ export default async function handle(req, res) {
     }
   }
 
-  if (method === 'PUT') {
-    try {
-      const { title, description, price, images, category, properties, _id } = req.body;
-      await Product.updateOne({ _id }, { title, description, price, images, category, properties });
-      res.status(200).json({ success: true });
-    } catch (error) {
-      console.error('Error updating product:', error);
-      res.status(500).json({ message: 'Error updating product' });
-    }
+ if (method === 'PUT') {
+  try {
+    const { title, description, price, images, category, properties, _id } = req.body;
+    
+    // Set the category to the default "Uncategorized" if no category is provided
+    const updatedCategory = category || defaultCategory._id;
+
+    await Product.updateOne(
+      { _id },
+      {
+        title,
+        description,
+        price,
+        images,
+        category: updatedCategory, // Use the updated category
+        properties,
+      }
+    );
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({ message: 'Error updating product' });
   }
+}
+
 
   if (method === 'DELETE') {
     try {
