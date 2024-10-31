@@ -19,21 +19,10 @@ export default async function handle(req, res) {
   if (method === 'GET') {
     try {
       if (req.query?.id) {
-        const product = await Product.findOne({ _id: req.query.id }).populate("category");
-  
-        // Check if the product is found
-        if (!product) {
-          return res.status(404).json({ message: 'Product not found' });
-        }
-  
-        // If the product has no category, return a message or default data
-        if (!product.category) {
-          return res.status(200).json({ ...product.toObject(), category: null });
-        }
-  
-        return res.status(200).json(product);
+        const product = await Product.findOne({ _id: req.query.id });
+        res.status(200).json(product);
       } else {
-        const products = await Product.find().populate("category").limit(50);
+        const products = await Product.find().limit(50); // Optional: limit for large collections
         res.status(200).json(products);
       }
     } catch (error) {
@@ -41,7 +30,6 @@ export default async function handle(req, res) {
       res.status(500).json({ message: 'Error fetching products' });
     }
   }
-  
 
   if (method === 'POST') {
     try {
@@ -56,32 +44,16 @@ export default async function handle(req, res) {
     }
   }
 
- if (method === 'PUT') {
-  try {
-    const { title, description, price, images, category, properties, _id } = req.body;
-    
-    // Set the category to the default "Uncategorized" if no category is provided
-    const updatedCategory = category || defaultCategory._id;
-
-    await Product.updateOne(
-      { _id },
-      {
-        title,
-        description,
-        price,
-        images,
-        category: updatedCategory, // Use the updated category
-        properties,
-      }
-    );
-
-    res.status(200).json({ success: true });
-  } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(500).json({ message: 'Error updating product' });
+  if (method === 'PUT') {
+    try {
+      const { title, description, price, images, category, properties, _id } = req.body;
+      await Product.updateOne({ _id }, { title, description, price, images, category, properties });
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Error updating product:', error);
+      res.status(500).json({ message: 'Error updating product' });
+    }
   }
-}
-
 
   if (method === 'DELETE') {
     try {
@@ -96,4 +68,4 @@ export default async function handle(req, res) {
       res.status(500).json({ message: 'Error deleting product' });
     }
   }
-}
+} 
