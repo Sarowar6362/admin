@@ -17,7 +17,7 @@ export default async function handle(req, res) {
 
   if (method === 'GET') {
     try {
-      const defaultCategory = await Category.findOne({ name: "Uncategorized" });
+      let defaultCategory = await Category.findOne({ name: "Uncategorized" });
       if (!defaultCategory) {
         // Create an "Uncategorized" category if it doesn't exist
         defaultCategory = await Category.create({ name: "Uncategorized" });
