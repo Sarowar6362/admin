@@ -1,18 +1,8 @@
 import { Product } from "@/models/Product";
-import { Category } from "@/models/Category";
 import { mongooseConnect } from "@/lib/mongoose";
 import { isAdminRequest } from "@/pages/api/auth/[...nextauth]";
 
-let defaultCategory;
-
-async function initializeDefaultCategory() {
-  if (!defaultCategory) {
-    defaultCategory = await Category.findOne({ name: "Uncategorized" });
-    if (!defaultCategory) {
-      defaultCategory = await Category.create({ name: "Uncategorized" });
-    }
-  }
-}
+export const maxDuration = 300;
 
 export default async function handle(req, res) {
   const { method } = req;
@@ -22,69 +12,58 @@ export default async function handle(req, res) {
     await isAdminRequest(req, res);
   } catch (error) {
     console.error('Error in isAdminRequest:', error);
-    return res.status(401).json({ message: 'Unauthorized access' });
+    res.status(401).json({ message: 'Unauthorized access' });
+    return;
   }
-
-  await initializeDefaultCategory();
 
   if (method === 'GET') {
     try {
       if (req.query?.id) {
-        // Fetch the product by ID and populate its category
-        let product = await Product.findById(req.query.id).populate("category");
-
-        // If product exists but has no category, assign default
-        if (product && !product.category) {
-          product.category = defaultCategory._id;
-          await product.save();
-          product = await Product.findById(req.query.id).populate("category");
-        }
-
-        // Check if the product still does not have a category
+        const product = await Product.findOne({ _id: req.query.id }).populate("category");
+  
+        // Check if the product is found
         if (!product) {
           return res.status(404).json({ message: 'Product not found' });
         }
-
+  
+        // If the product has no category, return a message or default data
+        if (!product.category) {
+          return res.status(200).json({ ...product.toObject(), category: null });
+        }
+  
         return res.status(200).json(product);
       } else {
         const products = await Product.find().populate("category").limit(50);
-        await Promise.all(
-          products.map(async (product) => {
-            if (!product.category) {
-              product.category = defaultCategory._id;
-              await product.save();
-            }
-          })
-        );
-        return res.status(200).json(products);
+        res.status(200).json(products);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
-      return res.status(500).json({ message: 'Error fetching products' });
+      res.status(500).json({ message: 'Error fetching products' });
     }
   }
+  
 
   if (method === 'POST') {
     try {
       const { title, description, price, images, category, properties } = req.body;
       const productDoc = await Product.create({
-        title, description, price, images, category: category || defaultCategory._id, properties,
+        title, description, price, images, category, properties,
       });
-      return res.status(201).json(productDoc);
+      res.status(201).json(productDoc);
     } catch (error) {
       console.error('Error creating product:', error);
-      return res.status(500).json({ message: 'Error creating product' });
+      res.status(500).json({ message: 'Error creating product' });
     }
   }
 
   if (method === 'PUT') {
     try {
       const { title, description, price, images, category, properties, _id } = req.body;
-      await Product.updateOne({ _id }, { title, description, price, images, category: category || defaultCategory._id, properties });
-      return res.status(200).json({ success: true });
+      await Product.updateOne({ _id }, { title, description, price, images, category, properties });
+      res.status(200).json({ success: true });
     } catch (error) {
       console.error('Error updating product:', error);
-      return res.status(500).json({ message: 'Error updating product' });
+      res.status(500).json({ message: 'Error updating product' });
     }
   }
 
@@ -92,13 +71,13 @@ export default async function handle(req, res) {
     try {
       if (req.query?.id) {
         await Product.deleteOne({ _id: req.query.id });
-        return res.status(200).json({ success: true });
+        res.status(200).json({ success: true });
       } else {
-        return res.status(400).json({ message: 'Product ID is required' });
+        res.status(400).json({ message: 'Product ID is required' });
       }
     } catch (error) {
       console.error('Error deleting product:', error);
-      return res.status(500).json({ message: 'Error deleting product' });
+      res.status(500).json({ message: 'Error deleting product' });
     }
   }
 }
