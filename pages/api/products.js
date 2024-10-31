@@ -16,35 +16,38 @@ export default async function handle(req, res) {
     return;
   }
 
- if (method === 'GET') {
-    try {
-      if (req.query?.id) {
-        const product = await Product.findOne({ _id: req.query.id }).populate("category");
-        
-        // Check if the product has a category assigned
-        if (!product.category) {
-          product.category = "Uncategorized"; // Set the default category if missing
-        }
-  
-        res.status(200).json(product);
-      } else {
-        const products = await Product.find().populate("category").limit(50); // Optional: limit for large collections
-  
-        // Set "Uncategorized" for any product missing a category
-        const productsWithCategoryFallback = products.map((product) => {
-          if (!product.category) {
-            product.category = "Uncategorized";
-          }
-          return product;
-        });
-  
-        res.status(200).json(productsWithCategoryFallback);
+
+if (method === 'GET') {
+  try {
+    if (req.query?.id) {
+      const product = await Product.findOne({ _id: req.query.id }).populate("category");
+      
+      // Check if the product has a category assigned
+      if (!product.category) {
+        product.category = "Uncategorized"; // Set the default category if missing
       }
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      res.status(500).json({ message: 'Error fetching products' });
+
+      res.status(200).json(product);
+    } else {
+      const products = await Product.find().populate("category").limit(50); // Optional: limit for large collections
+
+      // Set "Uncategorized" for any product missing a category
+      const productsWithCategoryFallback = products.map((product) => {
+        if (!product.category) {
+          product.category = "Uncategorized";
+        }
+        return product;
+      });
+
+      res.status(200).json(productsWithCategoryFallback);
     }
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ message: 'Error fetching products' });
   }
+}
+
+  
   if (method === 'POST') {
     try {
       const { title, description, price, images, category, properties } = req.body;
