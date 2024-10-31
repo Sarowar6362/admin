@@ -1,12 +1,12 @@
-import mongoose, { model, Schema, models } from "mongoose";
+import mongoose, {model, Schema, models} from "mongoose";
 
 const ProductSchema = new Schema({
-  title: { type: String, required: true },
-  description: { type: String, default: "" },  // Ensure description is always a string
-  price: { type: Number, required: true, min: 0 },  // Optional: enforce non-negative price
-  images: { type: [String], default: [] },  // Ensure images is always an array
-  category: { type: mongoose.Types.ObjectId, ref: 'Category', index: true },  // Index for faster category lookups
-  properties: { type: Object, default: {} },  // Ensure properties is always an object
+  title: {type:String, required:true},
+  description: String,
+  price: {type: Number, required: true},
+  images: [{type:String}],
+  category: {type:mongoose.Types.ObjectId, ref:'Category'},
+  properties: {type:Object},
 }, {
   timestamps: true,
 });
