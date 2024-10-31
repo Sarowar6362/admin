@@ -1,8 +1,7 @@
 import { Product } from "@/models/Product";
+import { Category } from "@/models/Category"; // import Category model
 import { mongooseConnect } from "@/lib/mongoose";
 import { isAdminRequest } from "@/pages/api/auth/[...nextauth]";
-
-export const maxDuration = 300;
 
 export default async function handle(req, res) {
   const { method } = req;
@@ -16,38 +15,44 @@ export default async function handle(req, res) {
     return;
   }
 
-
-if (method === 'GET') {
-  try {
-    if (req.query?.id) {
-      const product = await Product.findOne({ _id: req.query.id }).populate("category");
-      
-      // Check if the product has a category assigned
-      if (!product.category) {
-        product.category = "Uncategorized"; // Set the default category if missing
+  if (method === 'GET') {
+    try {
+      const defaultCategory = await Category.findOne({ name: "Uncategorized" });
+      if (!defaultCategory) {
+        // Create an "Uncategorized" category if it doesn't exist
+        defaultCategory = await Category.create({ name: "Uncategorized" });
       }
 
-      res.status(200).json(product);
-    } else {
-      const products = await Product.find().populate("category").limit(50); // Optional: limit for large collections
+      if (req.query?.id) {
+        let product = await Product.findOne({ _id: req.query.id }).populate("category");
 
-      // Set "Uncategorized" for any product missing a category
-      const productsWithCategoryFallback = products.map((product) => {
+        // Set category to "Uncategorized" if not found
         if (!product.category) {
-          product.category = "Uncategorized";
+          product.category = defaultCategory._id;
+          await product.save();
+          product = await Product.findOne({ _id: req.query.id }).populate("category");
         }
-        return product;
-      });
 
-      res.status(200).json(productsWithCategoryFallback);
+        res.status(200).json(product);
+      } else {
+        const products = await Product.find().populate("category").limit(50);
+        const productsWithFallback = products.map(product => {
+          if (!product.category) {
+            product.category = defaultCategory._id;
+            product.save(); // update the product
+          }
+          return product;
+        });
+        res.status(200).json(productsWithFallback);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ message: 'Error fetching products' });
     }
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ message: 'Error fetching products' });
   }
-}
 
   
+
   if (method === 'POST') {
     try {
       const { title, description, price, images, category, properties } = req.body;
