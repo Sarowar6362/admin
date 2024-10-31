@@ -16,7 +16,7 @@ export default async function handle(req, res) {
     return;
   }
 
-  if (method === 'GET') {
+ if (method === 'GET') {
     try {
       if (req.query?.id) {
         const product = await Product.findOne({ _id: req.query.id }).populate("category");
@@ -45,7 +45,6 @@ export default async function handle(req, res) {
       res.status(500).json({ message: 'Error fetching products' });
     }
   }
-
   if (method === 'POST') {
     try {
       const { title, description, price, images, category, properties } = req.body;
