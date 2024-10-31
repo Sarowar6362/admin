@@ -18,7 +18,7 @@ export default function Home() {
     <div>
       <br />
       <br />
-      Change you products however you want. 
+      Change your products however you want. 
     </div>
   </Layout>
 }
